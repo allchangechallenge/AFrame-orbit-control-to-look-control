@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.0.4/aframe.js"></script>
+        <script src="https://unpkg.com/aframe-orbit-controls@1.0.0/dist/aframe-orbit-controls.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+
+        <script src="https://cdn.jsdelivr.net/npm/animejs@3.0.1/lib/anime.min.js"></script>
+
+        <style>
+            #switch {
+                font-size: 500%;
+                margin-top: 2%;
+                margin-left: 2%;
+                position: absolute;
+                left: 17px;
+                top: 23px;
+                z-index: 6;
+            }
+            #walk {
+                font-size: 500%;
+                margin-top: 2%;
+                margin-left: 2%;
+                position: absolute;
+                left: 329px;
+                top: 23px;
+                z-index: 6;
+            }
+            #map {
+                position: absolute;
+                top: 23px;
+                right: 17px;
+                z-index: 6;
+                background-color: beige;
+                padding: 5%;
+                cursor: pointer;
+                font-size: 150%;
+                font-weight: bold;
+                text-align: center;
+            }
+            #front_txt {
+                position: relative;
+                top: 155px;
+                right: 23px;
+            }
+            #left_txt {
+                position: absolute;
+                top: 145px;
+                right: 380px;
+                transform: rotate( 90deg );
+            }
+            #map_title {
+                position: relative;
+                right: -39px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="up">
+            <button class="btn btn-light" id="switch">Switch</button>
+        </div>
+        <div id="map">
+            <span id="map_title">Map</span>
+            <span id="front_txt">Front</span>
+            <span id="left_txt">Left</span>
+        </div>
+        <div>
+            <a-scene>
+
+                <a-box id="floor" color="#eb3471" depth="20" height="0.2" width="20" rotation="0 0 0" position="0 0 0">
+                    <a-entity id="front" position="0 0.1 9.7" text="value: Front; color: white; align: center; side: double; wrapCount: 12" scale="4 4 4" rotation="-90 0 0"></a-entity>
+                    <a-entity id="front" position="-9.7 0.1 0" text="value: Left; color: white; align: center; side: double; wrapCount: 12" scale="4 4 4" rotation="-90 -90 0"></a-entity>
+                </a-box>
+                <a-sky color="lightblue"></a-sky>
+
+                <a-sphere id="cam_obj" radius="0.5" position="0 0 0"></a-sphere>
+                <a-sphere id="pers" radius="0.5" color="yellow" position="-8 10 15"></a-sphere>
+
+                <a-box id="b_cube" color="#75a2eb" depth="1" position="2 0.5 5"></a-box>
+                <a-box id="g_cube" color="#8cbf82" depth="1" position="-5 0.5 -2"></a-box>
+
+                <a-entity camera id="cam" look-controls="enabled: false" wasd-controls orbit-controls="target: 0 0 0; minDistance: 0.5; maxDistance: 20; initialPosition: -8 10 15; maxPolarAngle: 80; minPolarAngle: 40">
+                </a-entity>
+
+            </a-scene>
+        </div>
+
+        <script>
+            window.alert( '未切換前為軌道式環繞相機\n按下Switch可切換到第一人稱相機視角\n\n\
+按下Switch前在右上方畫出的軌跡 : \n\
+滑鼠按下的起點代表切換之後第一人稱相機的起點\n\
+滑鼠放開的終點代表切換之後相機會看的方向\n\n\
+要將第一人稱相機切回軌道式環繞相機再按下Switch即可' ) ;
+
+            let map = document.getElementById( 'map' ) ;   // ( 2637, 22 ) ( 2987, 353 )
+            map.addEventListener( 'mousedown', get_vr_point ) ;
+            map.addEventListener( 'mouseup', get_vr_look ) ;
+
+            let map_x, map_y ;
+            let vr_pos = new THREE.Vector3( 9, 3, -9 ) ;   // default position
+            let vr_look = new THREE.Vector3( 0, 3, 0 ) ;
+
+            function get_vr_point( event ) {
+                console.log( event.clientX, event.clientY ) ;
+                let r_x = 20 / ( 2987 - 2637 ) ;
+                map_x = ( event.clientX - 2812 ) * r_x ;
+                let r_y = 20 / ( 353 - 22 ) ;
+                map_y = ( event.clientY - 187.5 ) * r_y ;
+
+                vr_pos.x = map_x ; 
+                vr_pos.z = map_y ;
+                return map_x, map_y, vr_pos ;
+            } console.log( map_x, map_y ) ;
+
+            let map_end_x, map_end_y ;
+            function get_vr_look( event ) {
+                console.log( event.clientX, event.clientY ) ;
+                let r_x = 20 / ( 2987 - 2637 ) ;
+                map_end_x = ( event.clientX - 2812 ) * r_x ;
+                let r_y = 20 / ( 353 - 22 ) ;
+                map_end_y = ( event.clientY - 187.5 ) * r_y ;
+
+                let map_look = new THREE.Vector3( map_end_x, 0, map_end_y ) ;
+                let map = cam.object3D.children[0].clone()
+                map.position.x = vr_pos.x ;
+                map.position.y = vr_pos.y ;
+                map.position.z = vr_pos.z ;
+                map.rotation.x = 0 ;
+                map.rotation.y = 0 ;
+                map.rotation.z = 0 ;
+                map.rotation.reorder( 'YXZ' ) ;
+                map.lookAt( map_look ) ;
+                vr_look = map.rotation.clone() ;
+                console.log( vr_pos, map, vr_look ) ;
+                return vr_look ;
+            } 
+            // console.log( map_x, map_y ) ;
+            
+            var sw = document.getElementById( 'switch' ) ;
+            var cam = document.getElementById( 'cam' ) ;
+            sw.addEventListener( 'click', switchCam ) ;
+
+            var cam_obj = document.getElementById( 'cam_obj' ) ;
+            var pers = document.getElementById( 'pers' ) ;
+
+            var vr = 0 ;   // Determining whether it's a VR mode
+            var yaw_y = 0.7 ;
+
+            var distance = {
+                            ratio : 0
+                        } ;
+            var duration = 1000 ;
+
+            let d_180 = THREE.Math.degToRad( 180 ) ;
+            let d_360 = THREE.Math.degToRad( 360 ) ;
+
+            function switchCam() {
+                if ( vr == 0 ) {   // --- Into VR camera ---
+                    cam.setAttribute( 'orbit-controls', 'enabled : false' ) ;
+                    console.log( map_x, map_y ) ;
+                    var persCam = {
+                        target : new THREE.Vector3( vr_pos.x, vr_pos.y, vr_pos.z ),
+                        origin : new THREE.Vector3( cam.object3D.children[0].position.x, 
+                                                    cam.object3D.children[0].position.y, 
+                                                    cam.object3D.children[0].position.z,  ),
+
+                        rot_t : new THREE.Vector3( vr_look.x, vr_look.y, vr_look.z ),
+                        rot_o : new THREE.Vector3( cam.object3D.children[0].rotation.x, 
+                                                   cam.object3D.children[0].rotation.y, 
+                                                   cam.object3D.children[0].rotation.z,  ),
+                    } ;
+                    console.log( persCam.target ) ;
+
+                    if ( ( persCam.rot_t.x - persCam.rot_o.x ) > d_180 ) persCam.rot_t.x -= d_360 ;
+                    if ( ( persCam.rot_t.x - persCam.rot_o.x ) < -1 * d_180 ) persCam.rot_t.x += d_360 ;
+                    if ( ( persCam.rot_t.y - persCam.rot_o.y ) > d_180 ) persCam.rot_t.y -= d_360 ;
+                    if ( ( persCam.rot_t.y - persCam.rot_o.y ) < -1 * d_180 ) persCam.rot_t.y += d_360 ;
+                    if ( ( persCam.rot_t.z - persCam.rot_o.z ) > d_180 ) persCam.rot_t.z -= d_360 ;
+                    if ( ( persCam.rot_t.z - persCam.rot_o.z ) < -1 * d_180 ) persCam.rot_t.z += d_360 ;
+
+                    var direction = {
+                        pers_pos : persCam.target.clone().add( persCam.origin.clone().multiplyScalar( -1 ) ), 
+                        pers_rot : persCam.rot_t.clone().add( persCam.rot_o.clone().multiplyScalar( -1 ) ), 
+                    } ;
+                    
+                    distance.ratio = 0 ;
+
+                    let vrCam = anime( {
+                        targets : distance,
+                        duration : duration,
+                        easing : 'linear',
+                        round : 1,
+                        ratio : 1000,
+                        update : function() {
+                            let persPos = new THREE.Vector3( persCam.origin.x + direction.pers_pos.x * distance.ratio / 1000,
+                                                             persCam.origin.y + direction.pers_pos.y * distance.ratio / 1000,
+                                                             persCam.origin.z + direction.pers_pos.z * distance.ratio / 1000 )
+                            let persRot = new THREE.Vector3( ( persCam.rot_o.x + direction.pers_rot.x * distance.ratio / 1000 ) ,
+                                                             ( persCam.rot_o.y + direction.pers_rot.y * distance.ratio / 1000 ) ,
+                                                             ( persCam.rot_o.z + direction.pers_rot.z * distance.ratio / 1000 ) )
+                          
+                            cam.object3D.children[0].position.x = persPos.x ;
+                            cam.object3D.children[0].position.y = persPos.y ;
+                            cam.object3D.children[0].position.z = persPos.z ;
+
+                            cam.object3D.children[0].rotation.x = persRot.x ;
+                            cam.object3D.children[0].rotation.y = persRot.y ;
+                            cam.object3D.children[0].rotation.z = persRot.z ;
+                        },
+
+                        complete : function() {
+                            cam.setAttribute( 'look-controls', 'enabled : true' ) ;
+
+                            cam.object3D.position.x = cam.object3D.children[0].position.x ;
+                            cam.object3D.position.y = cam.object3D.children[0].position.y ;
+                            cam.object3D.position.z = cam.object3D.children[0].position.z ;
+
+                            let temp = cam.object3D.children[0].rotation.clone() ;
+                            cam.components[ 'look-controls' ].pitchObject.rotation.x = temp.x ;
+                            cam.components[ 'look-controls' ].yawObject.rotation.y = temp.y ;
+
+                            cam.object3D.children[0].position.x = 0 ;
+                            cam.object3D.children[0].position.y = 0 ;
+                            cam.object3D.children[0].position.z = 0 ;
+
+                            cam.object3D.children[0].rotation.x = 0 ;
+                            cam.object3D.children[0].rotation.y = 0 ;
+                            cam.object3D.children[0].rotation.z = 0 ;
+                        }
+                    } ) ;
+                    vr = 1 ;   
+                }
+                else {   // --- Orbit camera ---
+                    cam.setAttribute( 'look-controls', 'enabled : false' ) ;
+                    let sceneCamRec = cam.object3D.position.clone() ;
+                    cam.object3D.children[0].position.x = sceneCamRec.x ;
+                    cam.object3D.children[0].position.y = sceneCamRec.y ;
+                    cam.object3D.children[0].position.z = sceneCamRec.z ;
+                    // console.log( cam.object3D.children[0].position.x, cam.object3D.children[0].position.y, cam.object3D.children[0].position.z ) ;
+
+                    let rotRec = { 'x' : cam.components[ 'look-controls' ].pitchObject.rotation.x, 
+                                   'y' : cam.components[ 'look-controls' ].yawObject.rotation.y, 'z' : 0 } ;
+                    cam.object3D.children[0].rotation.x = rotRec.x ;
+                    cam.object3D.children[0].rotation.y = rotRec.y ;
+                    cam.object3D.children[0].rotation.z = rotRec.z ;
+
+                    cam.object3D.position.x = 0 ;
+                    cam.object3D.position.y = 0 ;
+                    cam.object3D.position.z = 0 ;
+
+                    cam.components[ 'look-controls' ].yawObject.rotation.y = 0 ;
+                    cam.components[ 'look-controls' ].pitchObject.rotation.x = 0 ;
+                    cam.object3D.rotation.x = 0 ;
+                    cam.object3D.rotation.y = 0 ;
+                    cam.object3D.rotation.z = 0 ;
+
+                    let temp = Math.pow( sceneCamRec.x, 2 ) + Math.pow( sceneCamRec.z, 2 ) ;
+                    temp = Math.sqrt( temp ) ;
+                    let multiPower = 17 / temp ;
+
+                    let target_pos = new THREE.Vector3( cam.object3D.children[0].position.x * multiPower, 10,
+                                                        cam.object3D.children[0].position.z * multiPower ) ;
+
+                    // use lookat to determine the position to turn to 
+                    let a = cam.object3D.children[0].clone()
+                    a.position.x = target_pos.x ;
+                    a.position.y = target_pos.y ;
+                    a.position.z = target_pos.z ;
+                    a.lookAt( new THREE.Vector3( 0, 0, 0 ) ) ;
+                    a.rotation.reorder( 'YXZ' ) ;
+
+                    distance.ratio = 0 ;
+
+                    var persCam = {
+                        target : new THREE.Vector3( target_pos.x, target_pos.y, target_pos.z ),
+                        origin : new THREE.Vector3( cam.object3D.children[0].position.x, 
+                                                    cam.object3D.children[0].position.y, 
+                                                    cam.object3D.children[0].position.z,  ),
+
+                        rot_t : new THREE.Vector3( a.rotation.x, a.rotation.y, a.rotation.z ),
+                        rot_o : new THREE.Vector3( rotRec.x, 
+                                                   rotRec.y, 
+                                                   rotRec.z,  ),
+                    } ;
+                    // console.log( persCam.rot_o, persCam.rot_t ) ;
+
+                    if ( ( persCam.rot_t.x - persCam.rot_o.x ) > d_180 ) persCam.rot_t.x -= d_360 ;
+                    if ( ( persCam.rot_t.x - persCam.rot_o.x ) < -1 * d_180 ) persCam.rot_t.x += d_360 ;
+                    if ( ( persCam.rot_t.y - persCam.rot_o.y ) > d_180 ) persCam.rot_t.y -= d_360 ;
+                    if ( ( persCam.rot_t.y - persCam.rot_o.y ) < -1 * d_180 ) persCam.rot_t.y += d_360 ;
+                    if ( ( persCam.rot_t.z - persCam.rot_o.z ) > d_180 ) persCam.rot_t.z -= d_360 ;
+                    if ( ( persCam.rot_t.z - persCam.rot_o.z ) < -1 * d_180 ) persCam.rot_t.z += d_360 ;
+                    // console.log( persCam.rot_o, persCam.rot_t ) ;
+
+                    var direction = {
+                        pers_pos : persCam.target.clone().sub( persCam.origin.clone() ), 
+                        pers_rot : persCam.rot_t.clone().sub( persCam.rot_o.clone() ), 
+                    } ;
+                    // console.log( direction.pers_rot ) ;
+
+                    let orbitCam = anime( {
+                            targets : distance,
+                            duration : duration,
+                            easing : 'linear',
+                            round : 1,
+                            ratio : 1000,
+                            update : function() {
+                                let persPos = new THREE.Vector3( persCam.origin.x + direction.pers_pos.x * distance.ratio / 1000,
+                                                                persCam.origin.y + direction.pers_pos.y * distance.ratio / 1000,
+                                                                persCam.origin.z + direction.pers_pos.z * distance.ratio / 1000 )
+                                let persRot = new THREE.Vector3( persCam.rot_o.x + direction.pers_rot.x * distance.ratio / 1000,
+                                                                persCam.rot_o.y + direction.pers_rot.y * distance.ratio / 1000,
+                                                                persCam.rot_o.z + direction.pers_rot.z * distance.ratio / 1000 )
+
+                                cam.object3D.children[0].position.x = persPos.x ;
+                                cam.object3D.children[0].position.y = persPos.y ;
+                                cam.object3D.children[0].position.z = persPos.z ;
+
+                                cam.object3D.children[0].rotation.x = persRot.x ;
+                                cam.object3D.children[0].rotation.y = persRot.y ;
+                                cam.object3D.children[0].rotation.z = persRot.z ;
+                                cam.object3D.children[0].rotation.reorder( 'YXZ' ) ;                                
+                            },
+
+                            complete : function() {
+                                cam.setAttribute( 'orbit-controls', 'enabled : true' ) ;
+                            }
+                    } ) ;
+                    vr = 0 ;
+                }
+            }
+        </script>
+    </body>
+</html>
